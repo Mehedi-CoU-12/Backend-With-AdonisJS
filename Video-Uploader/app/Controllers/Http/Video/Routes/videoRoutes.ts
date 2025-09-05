@@ -7,8 +7,8 @@ Route.group(() => {
   Route.put("/update/:id", "videoController.update");
   Route.delete("/delete/:id", "videoController.destroy");
 
-  //web hook
-  Route.post('/bunny-webhook',"videoController");
+  // Webhook endpoint for external services (like Bunny.net)
+  Route.post('/bunny-webhook', "videoController.webhook");
 
 })
   .prefix("api/v1")
