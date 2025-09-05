@@ -6,6 +6,10 @@ Route.group(() => {
   Route.get("/get-single-video/:id", "videoController.show");
   Route.put("/update/:id", "videoController.update");
   Route.delete("/delete/:id", "videoController.destroy");
+
+  //web hook
+  Route.post('/bunny-webhook',"videoController");
+
 })
   .prefix("api/v1")
   .namespace("App/Controllers/Http/Video/Controller");

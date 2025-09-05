@@ -6,12 +6,25 @@ export default class videoController {
     constructor(){
         this.service=new videoService();
     }
+    //get all video
+    public async index({response}:HttpContextContract) {
+        const getResult=await this.service.getAllVideo();
 
-    public async index() {
-        console.log('-----------------------------------------')
-        return {mehedi:"hasan"};
+        return response.status(200).json({
+            message:"all the video fetched successfully!",
+            data:getResult
+        })
     }
-    public async show() {}
+    //get single video
+    public async show({params,response}:HttpContextContract) {
+        const getResult=await this.service.getSingleVideo(params.id);
+
+        return response.status(200).json({
+            message:"video fetched successfully!",
+            data:getResult
+        })
+    }
+    //upload video
     public async store({ request, response }: HttpContextContract){
 
         const body=request.all();
@@ -23,7 +36,23 @@ export default class videoController {
             data:uploadResult
         })
     }
-    public async update(){}
-    public async destroy(){}
+    //update video
+    public async update({params,request,response}:HttpContextContract){
+        const body=request.all();
+        const updateResult=await this.service.updateVideo(params.id,body);
+
+        return response.status(200).json({
+            message:"video info updated successfully!",
+            data:updateResult
+        })
+    }
+    public async destroy({params,response}:HttpContextContract){
+        const deleteResult=await this.service.deleteVideo(params.id);
+
+        return response.status(200).json({
+            message:"video deleted successfully!",
+            data:deleteResult
+        })
+    }
 }
 

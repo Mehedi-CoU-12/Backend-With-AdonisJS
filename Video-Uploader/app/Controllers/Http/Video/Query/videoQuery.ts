@@ -1,144 +1,144 @@
-// import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-// import BunnyStreamService from 'App/Controllers/Http/VideosService'
+import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 
-// export default class VideosController {
-//   private bunnyStreamService: BunnyStreamService
 
-//   constructor() {
-//     this.bunnyStreamService = new BunnyStreamService()
-//   }
+export default class VideosController {
+  private bunnyStreamService: BunnyStreamService
 
-//   public async uploadFromUrl({ request, response }: HttpContextContract) {
-//     try {
-//       // Get request data
-//       const { videoUrl, title, collectionId } = request.all()
+  constructor() {
+    this.bunnyStreamService = new BunnyStreamService()
+  }
 
-//       // Create video in Bunny Stream
-//       const video = await this.bunnyStreamService.createVideo(title, collectionId)
+  public async uploadFromUrl({ request, response }: HttpContextContract) {
+    try {
+      // Get request data
+      const { videoUrl, title, collectionId } = request.all()
 
-//       // Upload video from URL
-//       const uploadResult = await this.bunnyStreamService.uploadVideoFromUrl(video.guid, videoUrl)
+      // Create video in Bunny Stream
+      const video = await this.bunnyStreamService.createVideo(title, collectionId)
 
-//       return response.ok({
-//         message: 'Video upload initiated successfully',
-//         data: {
-//           videoId: video.guid,
-//           title: video.title,
-//           uploadTask: uploadResult.task,
-//           // video,
-//         },
-//       })
-//     } catch (error) {
-//       return response.internalServerError({
-//         message: 'Failed to upload video',
-//         error: error.message,
-//       })
-//     }
-//   }
+      // Upload video from URL
+      const uploadResult = await this.bunnyStreamService.uploadVideoFromUrl(video.guid, videoUrl)
 
-//   public async show({ params, response }: HttpContextContract) {
-//     try {
-//       const videoId = params.id
+      return response.ok({
+        message: 'Video upload initiated successfully',
+        data: {
+          videoId: video.guid,
+          title: video.title,
+          uploadTask: uploadResult.task,
+          // video,
+        },
+      })
+    } catch (error) {
+      return response.internalServerError({
+        message: 'Failed to upload video',
+        error: error.message,
+      })
+    }
+  }
 
-//       if (!videoId) {
-//         return response.badRequest({
-//           message: 'Video ID is required',
-//         })
-//       }
+  public async show({ params, response }: HttpContextContract) {
+    try {
+      const videoId = params.id
 
-//       const video = await this.bunnyStreamService.getVideo(videoId)
+      if (!videoId) {
+        return response.badRequest({
+          message: 'Video ID is required',
+        })
+      }
 
-//       return response.ok({
-//         message: 'Video retrieved successfully',
-//         data: video,
-//       })
-//     } catch (error) {
-//       return response.internalServerError({
-//         message: 'Failed to retrieve video',
-//         error: error.message,
-//       })
-//     }
-//   }
+      const video = await this.bunnyStreamService.getVideo(videoId)
 
-//   public async index({ request, response }: HttpContextContract) {
-//     try {
-//       const {
-//         page = 1,
-//         itemsPerPage = 10,
-//         search,
-//         collection,
-//         orderBy,
-//       } = request.only(['page', 'itemsPerPage', 'search', 'collection', 'orderBy'])
+      return response.ok({
+        message: 'Video retrieved successfully',
+        data: video,
+      })
+    } catch (error) {
+      return response.internalServerError({
+        message: 'Failed to retrieve video',
+        error: error.message,
+      })
+    }
+  }
 
-//       const videos = await this.bunnyStreamService.listVideos(
-//         Number(page),
-//         Number(itemsPerPage),
-//         search,
-//         collection,
-//         orderBy
-//       )
+  public async index({ request, response }: HttpContextContract) {
+    try {
+      const {
+        page = 1,
+        itemsPerPage = 10,
+        search,
+        collection,
+        orderBy,
+      } = request.only(['page', 'itemsPerPage', 'search', 'collection', 'orderBy'])
 
-//       return response.ok({
-//         message: 'Videos retrieved successfully',
-//         data: videos,
-//       })
-//     } catch (error) {
-//       return response.internalServerError({
-//         message: 'Failed to retrieve videos',
-//         error: error.message,
-//       })
-//     }
-//   }
+      const videos = await this.bunnyStreamService.listVideos(
+        Number(page),
+        Number(itemsPerPage),
+        search,
+        collection,
+        orderBy
+      )
 
-//   public async update({ params, request, response }: HttpContextContract) {
-//     try {
-//       const videoId = params.id
-//       // Get request data
-//       const updates = request.all()
+      return response.ok({
+        message: 'Videos retrieved successfully',
+        data: videos,
+      })
+    } catch (error) {
+      return response.internalServerError({
+        message: 'Failed to retrieve videos',
+        error: error.message,
+      })
+    }
+  }
 
-//       if (!videoId) {
-//         return response.badRequest({
-//           message: 'Video ID is required',
-//         })
-//       }
+  public async update({ params, request, response }: HttpContextContract) {
+    try {
+      const videoId = params.id
+      // Get request data
+      const updates = request.all()
 
-//       const video = await this.bunnyStreamService.updateVideo(videoId, updates)
+      if (!videoId) {
+        return response.badRequest({
+          message: 'Video ID is required',
+        })
+      }
 
-//       return response.ok({
-//         message: 'Video updated successfully',
-//         data: video,
-//       })
-//     } catch (error) {
-//       return response.internalServerError({
-//         message: 'Failed to update video',
-//         error: error.message,
-//       })
-//     }
-//   }
+      const video = await this.bunnyStreamService.updateVideo(videoId, updates)
 
-//   public async destroy({ params, response }: HttpContextContract) {
-//     try {
-//       const videoId = params.id
+      return response.ok({
+        message: 'Video updated successfully',
+        data: video,
+      })
+    } catch (error) {
+      return response.internalServerError({
+        message: 'Failed to update video',
+        error: error.message,
+      })
+    }
+  }
 
-//       if (!videoId) {
-//         return response.badRequest({
-//           message: 'Video ID is required',
-//         })
-//       }
+  public async destroy({ params, response }: HttpContextContract) {
+    try {
+      const videoId = params.id
 
-//       await this.bunnyStreamService.deleteVideo(videoId)
+      if (!videoId) {
+        return response.badRequest({
+          message: 'Video ID is required',
+        })
+      }
 
-//       return response.ok({
-//         message: 'Video deleted successfully',
-//       })
-//     } catch (error) {
-//       return response.internalServerError({
-//         message: 'Failed to delete video',
-//         error: error.message,
-//       })
-//     }
-//   }
-// }
+      await this.bunnyStreamService.deleteVideo(videoId)
+
+      return response.ok({
+        message: 'Video deleted successfully',
+      })
+    } catch (error) {
+      return response.internalServerError({
+        message: 'Failed to delete video',
+        error: error.message,
+      })
+    }
+  }
+}
 
 
 // import axios, { AxiosResponse } from 'axios'
