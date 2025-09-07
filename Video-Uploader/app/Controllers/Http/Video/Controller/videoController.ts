@@ -13,21 +13,33 @@ export default class videoController {
     this.service = new videoService();
   }
   //get all video
-  public async index({ response }: HttpContextContract) {
+  public async index({ request, response }: HttpContextContract) {
     try {
+    
       // Get videos from both Bunny.net and our database
-      const [bunnyVideos, databaseVideos] = await Promise.all([
+      const promises = [
         this.service.getAllVideoFromBunnyDatabase(),
         this.service.getAllVideosFromMyDatabase(),
-      ]);
+      ];
+
+      
+      const results = await Promise.all(promises);
+      const [bunnyVideos, databaseVideos, stats] = results;
+
+      let responseData: any = {
+        bunnyVideos,
+        databaseVideos,
+        totalInDatabase: databaseVideos.length,
+      };
+      
+      // Add statistics if requested
+      if (stats) {
+        responseData.statistics = stats;
+      }
 
       return response.status(200).json({
         message: "All videos fetched successfully!",
-        data: {
-          bunnyVideos,
-          databaseVideos,
-          totalInDatabase: databaseVideos.length,
-        },
+        data: responseData,
       });
     } catch (error) {
       console.error("Error fetching videos:", error);

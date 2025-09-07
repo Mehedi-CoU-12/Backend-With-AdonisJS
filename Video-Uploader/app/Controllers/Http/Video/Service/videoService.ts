@@ -1,16 +1,19 @@
 import Env from "@ioc:Adonis/Core/Env";
 import axios from "axios";
 import Video from "App/Models/Video";
+import VideoQuery from "../Query/videoQuery";
 
 export default class videoService {
   private apiKey: string;
   private libraryId: string;
   private baseUrl: string;
+  private videoQuery: VideoQuery;
 
   constructor() {
     this.apiKey = Env.get("APP_KEY");
     this.libraryId = Env.get("LIBRARY_ID");
     this.baseUrl = Env.get("BUNNY_URL");
+    this.videoQuery = new VideoQuery();
   }
 
   public async createVideo(body: any) {
@@ -29,12 +32,12 @@ export default class videoService {
 
       const bunnyResponse = response?.data;
 
-      // Save video info to database
+      // Save video info to database using query layer
       if (bunnyResponse) {
-        const video = await Video.create({
+        const video = await this.videoQuery.createVideo({
           videoId: bunnyResponse?.id,
           libraryId: this.libraryId,
-          title: body.title || "Untitled Video",
+          title: body.title,
           isFinished: "uploading",
           processingStatus: 0, // 0 = queued/uploading
           metadata: bunnyResponse,
@@ -70,17 +73,13 @@ export default class videoService {
 
       const bunnyResponse = response?.data;
 
-      // Also update video in our MySQL database
-      const video = await Video.findBy("videoId", id);
+      // Also update video in our MySQL database using query layer
+      const video = await this.videoQuery.updateByVideoId(id, {
+        title: body.title,
+        metadata: { ...bunnyResponse },
+      });
+
       if (video) {
-        // Update fields that might have changed
-        if (body.title) video.title = body.title;
-
-        // Update metadata with the response from Bunny.net
-        video.metadata = { ...video.metadata, ...bunnyResponse };
-
-        await video.save();
-
         console.log(
           `✅ Updated video ${id} in both Bunny.net and MySQL database`
         );
@@ -108,8 +107,8 @@ export default class videoService {
 
   public async deleteVideo(id: string) {
     try {
-      // First check if video exists in our database
-      const video = await Video.findBy("videoId", id);
+      // First check if video exists in our database using query layer
+      const existingVideo = await this.videoQuery.findByVideoId(id);
 
       // Delete video from Bunny.net
       const response = await axios.delete(
@@ -124,9 +123,10 @@ export default class videoService {
 
       const bunnyResponse = response?.data;
 
-      // Also delete video from our MySQL database
-      if (video) {
-        await video.delete();
+      // Also delete video from our MySQL database using query layer
+      const deletedVideo = await this.videoQuery.deleteByVideoId(id);
+      
+      if (deletedVideo) {
         console.log(
           `✅ Deleted video ${id} from both Bunny.net and MySQL database`
         );
@@ -134,8 +134,8 @@ export default class videoService {
         return {
           ...bunnyResponse,
           databaseDeleted: true,
-          deletedDatabaseId: video.id,
-          deletedTitle: video.title,
+          deletedDatabaseId: existingVideo?.id,
+          deletedTitle: existingVideo?.title,
         };
       } else {
         console.warn(
@@ -192,20 +192,14 @@ export default class videoService {
     additionalData: any = {}
   ) {
     try {
-      // Try to find by videoId first (which stores the Bunny.net video ID/GUID)
-      const video = await Video.findBy("videoId", videoGuid);
+      // Use query layer to update video status
+      const video = await this.videoQuery.updateVideoStatus(
+        videoGuid,
+        status,
+        additionalData
+      );
 
       if (video) {
-        video.processingStatus = status;
-        video.isFinished = status === 3 ? "success" : "failed"; // Status 3 means finished processing
-
-        // Update metadata
-        if (additionalData.metadata) {
-          video.metadata = { ...video.metadata, ...additionalData.metadata };
-        }
-
-        await video.save();
-
         console.log(
           `Updated video ${videoGuid} status to ${status} - isFinished: ${video.isFinished}`
         );
@@ -220,18 +214,9 @@ export default class videoService {
     }
   }
 
-  public async getVideoByGuid(videoGuid: string) {
-    try {
-      return await Video.findBy("videoId", videoGuid);
-    } catch (error) {
-      console.error("Error getting video by GUID:", error);
-      throw error;
-    }
-  }
-
   public async getAllVideosFromMyDatabase() {
     try {
-      return await Video.all();
+      return await this.videoQuery.getAllVideos();
     } catch (error) {
       console.error("Error getting all videos from database:", error);
       throw error;

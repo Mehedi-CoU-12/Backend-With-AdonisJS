@@ -1,358 +1,154 @@
-// import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+import Video from "App/Models/Video";
+
+export default class VideoQuery {
+  public async createVideo(data: {
+    videoId: string;
+    libraryId: string;
+    title?: string;
+    isFinished?: string;
+    processingStatus?: number;
+    metadata?: any;
+  }): Promise<Video> {
+    try {
+      const video = await Video.create({
+        videoId: data.videoId,
+        libraryId: data.libraryId,
+        title: data.title || "Untitled Video",
+        isFinished: data.isFinished || "uploading",
+        processingStatus: data.processingStatus || 0,
+        metadata: data.metadata || null,
+      });
+
+      console.log(`✅ Created video record with ID: ${video.id}`);
+      return video;
+    } catch (error) {
+      console.error("Error creating video in database:", error);
+      throw error;
+    }
+  }
+
+  public async findByVideoId(videoId: string): Promise<Video | null> {
+    try {
+      const video = await Video.findBy("videoId", videoId);
+      return video;
+    } catch (error) {
+      console.error(`Error finding video by videoId ${videoId}:`, error);
+      throw error;
+    }
+  }
+
+  public async findById(id: number): Promise<Video | null> {
+    try {
+      const video = await Video.find(id);
+      return video;
+    } catch (error) {
+      console.error(`Error finding video by ID ${id}:`, error);
+      throw error;
+    }
+  }
+
+  public async getAllVideos(): Promise<Video[]> {
+    try {
+      let query = Video.query();
+
+      const videos = await query;
+      console.log(`📊 Retrieved ${videos.length} videos from database`);
+      return videos;
+    } catch (error) {
+      console.error("Error getting all videos from database:", error);
+      throw error;
+    }
+  }
 
 
-// export default class VideosController {
-//   private bunnyStreamService: BunnyStreamService
+  public async updateByVideoId(
+    videoId: string,
+    updateData: {
+      title?: string;
+      isFinished?: string;
+      processingStatus?: number;
+      metadata?: any;
+    }
+  ): Promise<Video | null> {
+    try {
+      const video = await this.findByVideoId(videoId);
 
-//   constructor() {
-//     this.bunnyStreamService = new BunnyStreamService()
-//   }
+      if (!video) {
+        console.warn(`⚠️ Video with videoId ${videoId} not found for update`);
+        return null;
+      }
 
-//   public async uploadFromUrl({ request, response }: HttpContextContract) {
-//     try {
-//       // Get request data
-//       const { videoUrl, title, collectionId } = request.all()
+      // Update fields if provided
+      if (updateData.title !== undefined) video.title = updateData.title;
+      if (updateData.isFinished !== undefined)
+        video.isFinished = updateData.isFinished;
+      if (updateData.processingStatus !== undefined)
+        video.processingStatus = updateData.processingStatus;
+      if (updateData.metadata !== undefined) {
+        video.metadata = { ...video.metadata, ...updateData.metadata };
+      }
 
-//       // Create video in Bunny Stream
-//       const video = await this.bunnyStreamService.createVideo(title, collectionId)
-
-//       // Upload video from URL
-//       const uploadResult = await this.bunnyStreamService.uploadVideoFromUrl(video.guid, videoUrl)
-
-//       return response.ok({
-//         message: 'Video upload initiated successfully',
-//         data: {
-//           videoId: video.guid,
-//           title: video.title,
-//           uploadTask: uploadResult.task,
-//           // video,
-//         },
-//       })
-//     } catch (error) {
-//       return response.internalServerError({
-//         message: 'Failed to upload video',
-//         error: error.message,
-//       })
-//     }
-//   }
-
-//   public async show({ params, response }: HttpContextContract) {
-//     try {
-//       const videoId = params.id
-
-//       if (!videoId) {
-//         return response.badRequest({
-//           message: 'Video ID is required',
-//         })
-//       }
-
-//       const video = await this.bunnyStreamService.getVideo(videoId)
-
-//       return response.ok({
-//         message: 'Video retrieved successfully',
-//         data: video,
-//       })
-//     } catch (error) {
-//       return response.internalServerError({
-//         message: 'Failed to retrieve video',
-//         error: error.message,
-//       })
-//     }
-//   }
-
-//   public async index({ request, response }: HttpContextContract) {
-//     try {
-//       const {
-//         page = 1,
-//         itemsPerPage = 10,
-//         search,
-//         collection,
-//         orderBy,
-//       } = request.only(['page', 'itemsPerPage', 'search', 'collection', 'orderBy'])
-
-//       const videos = await this.bunnyStreamService.listVideos(
-//         Number(page),
-//         Number(itemsPerPage),
-//         search,
-//         collection,
-//         orderBy
-//       )
-
-//       return response.ok({
-//         message: 'Videos retrieved successfully',
-//         data: videos,
-//       })
-//     } catch (error) {
-//       return response.internalServerError({
-//         message: 'Failed to retrieve videos',
-//         error: error.message,
-//       })
-//     }
-//   }
-
-//   public async update({ params, request, response }: HttpContextContract) {
-//     try {
-//       const videoId = params.id
-//       // Get request data
-//       const updates = request.all()
-
-//       if (!videoId) {
-//         return response.badRequest({
-//           message: 'Video ID is required',
-//         })
-//       }
-
-//       const video = await this.bunnyStreamService.updateVideo(videoId, updates)
-
-//       return response.ok({
-//         message: 'Video updated successfully',
-//         data: video,
-//       })
-//     } catch (error) {
-//       return response.internalServerError({
-//         message: 'Failed to update video',
-//         error: error.message,
-//       })
-//     }
-//   }
-
-//   public async destroy({ params, response }: HttpContextContract) {
-//     try {
-//       const videoId = params.id
-
-//       if (!videoId) {
-//         return response.badRequest({
-//           message: 'Video ID is required',
-//         })
-//       }
-
-//       await this.bunnyStreamService.deleteVideo(videoId)
-
-//       return response.ok({
-//         message: 'Video deleted successfully',
-//       })
-//     } catch (error) {
-//       return response.internalServerError({
-//         message: 'Failed to delete video',
-//         error: error.message,
-//       })
-//     }
-//   }
-// }
+      await video.save();
+      console.log(`✅ Updated video ${videoId} in database`);
+      return video;
+    } catch (error) {
+      console.error(`Error updating video ${videoId}:`, error);
+      throw error;
+    }
+  }
 
 
-// import axios, { AxiosResponse } from 'axios'
-// import Env from '@ioc:Adonis/Core/Env'
+  public async updateVideoStatus(
+    videoGuid: string,
+    status: number,
+    additionalData: any = {}
+  ): Promise<Video | null> {
+    try {
+      const video = await this.findByVideoId(videoGuid);
 
-// export interface BunnyVideoUploadResponse {
-//   videoLibraryId: string
-//   guid: string
-//   title: string
-//   dateUploaded: string
-//   views: number
-//   isPublic: boolean
-//   length: number
-//   status: number
-//   framerate: number
-//   rotation: number
-//   width: number
-//   height: number
-//   availableResolutions: string
-//   thumbnailCount: number
-//   encodeProgress: number
-//   storageSize: number
-//   captions: any[]
-//   hasMP4Fallback: boolean
-//   collectionId: string
-//   thumbnailFileName: string
-//   averageWatchTime: number
-//   totalWatchTime: number
-//   category: string
-//   chapters: any[]
-//   moments: any[]
-//   metaTags: any[]
-// }
+      if (!video) {
+        console.warn(`⚠️ Video with GUID ${videoGuid} not found in database`);
+        return null;
+      }
 
-// export interface BunnyUploadUrlResponse {
-//   message: string
-//   task: string
-// }
+      video.processingStatus = status;
+      video.isFinished =
+        status === 3 ? "success" : status === 5 ? "failed" : "processing";
 
-// export  class BunnyStreamService {
-//   private apiKey: string
-//   private libraryId: string
-//   private baseUrl: string
+      // Update metadata
+      if (additionalData.metadata) {
+        video.metadata = { ...video.metadata, ...additionalData.metadata };
+      }
 
-//   constructor() {
-//     this.apiKey = Env.get('BUNNY_STREAM_API_KEY')
-//     this.libraryId = Env.get('BUNNY_STREAM_LIBRARY_ID')
-//     this.baseUrl = Env.get('BUNNY_STREAM_BASE_URL', 'https://video.bunnycdn.com')
-//   }
+      await video.save();
 
-//   /**
-//    * Create a new video in Bunny Stream
-//    */
-//   public async createVideo(title: string, collectionId?: string): Promise<BunnyVideoUploadResponse> {
-//     try {
-//       const requestBody: any = { title }
-//       if (collectionId) {
-//         requestBody.collectionId = collectionId
-//       }
+      console.log(
+        `✅ Updated video ${videoGuid} status to ${status} - isFinished: ${video.isFinished}`
+      );
+      return video;
+    } catch (error) {
+      console.error(`Error updating video status for ${videoGuid}:`, error);
+      throw error;
+    }
+  }
 
-//       const response: AxiosResponse<BunnyVideoUploadResponse> = await axios.post(
-//         `${this.baseUrl}/library/${this.libraryId}/videos`,
-//         requestBody,
-//         {
-//           headers: {
-//             AccessKey: this.apiKey,
-//             'Content-Type': 'application/json',
-//           },
-//         }
-//       )
+  public async deleteByVideoId(videoId: string): Promise<Video | null> {
+    try {
+      const video = await this.findByVideoId(videoId);
 
-//       return response.data
-//     } catch (error) {
-//       throw new Error(`Failed to create video: ${error.response?.data?.message || error.message}`)
-//     }
-//   }
+      if (!video) {
+        console.warn(`⚠️ Video with videoId ${videoId} not found for deletion`);
+        return null;
+      }
 
-//   /**
-//    * Upload video from URL to Bunny Stream
-//    */
-//   public async uploadVideoFromUrl(
-//     videoId: string,
-//     videoUrl: string
-//   ): Promise<BunnyUploadUrlResponse> {
-//     try {
-//       const response: AxiosResponse<BunnyUploadUrlResponse> = await axios.post(
-//         `${this.baseUrl}/library/${this.libraryId}/videos/${videoId}/fetch`,
-//         {
-//           url: videoUrl,
-//         },
-//         {
-//           headers: {
-//             AccessKey: this.apiKey,
-//             'Content-Type': 'application/json',
-//           },
-//         }
-//       )
+      const deletedVideo = { ...video.toJSON() } as Video; // Keep copy before deletion
+      await video.delete();
 
-//       return response.data
-//     } catch (error) {
-//       throw new Error(
-//         `Failed to upload video from URL: ${error.response?.data?.message || error.message}`
-//       )
-//     }
-//   }
-
-//   /**
-//    * Get video details
-//    */
-//   public async getVideo(videoId: string): Promise<BunnyVideoUploadResponse> {
-//     try {
-//       const response: AxiosResponse<BunnyVideoUploadResponse> = await axios.get(
-//         `${this.baseUrl}/library/${this.libraryId}/videos/${videoId}`,
-//         {
-//           headers: {
-//             AccessKey: this.apiKey,
-//           },
-//         }
-//       )
-
-//       return response.data
-//     } catch (error) {
-//       throw new Error(`Failed to get video: ${error.response?.data?.message || error.message}`)
-//     }
-//   }
-
-//   /**
-//    * Delete video from Bunny Stream
-//    */
-//   public async deleteVideo(videoId: string): Promise<{ message: string }> {
-//     try {
-//       const response = await axios.delete(
-//         `${this.baseUrl}/library/${this.libraryId}/videos/${videoId}`,
-//         {
-//           headers: {
-//             AccessKey: this.apiKey,
-//           },
-//         }
-//       )
-
-//       return { message: 'Video deleted successfully' }
-//     } catch (error) {
-//       throw new Error(`Failed to delete video: ${error.response?.data?.message || error.message}`)
-//     }
-//   }
-
-//   /**
-//    * List all videos in the library
-//    */
-//   public async listVideos(
-//     page: number = 1,
-//     itemsPerPage: number = 100,
-//     search?: string,
-//     collection?: string,
-//     orderBy?: string
-//   ): Promise<{
-//     items: BunnyVideoUploadResponse[]
-//     currentPage: number
-//     itemsPerPage: number
-//     totalItems: number
-//   }> {
-//     try {
-//       const params = new URLSearchParams({
-//         page: page.toString(),
-//         itemsPerPage: itemsPerPage.toString(),
-//       })
-
-//       if (search) params.append('search', search)
-//       if (collection) params.append('collection', collection)
-//       if (orderBy) params.append('orderBy', orderBy)
-
-//       const response = await axios.get(
-//         `${this.baseUrl}/library/${this.libraryId}/videos?${params.toString()}`,
-//         {
-//           headers: {
-//             AccessKey: this.apiKey,
-//           },
-//         }
-//       )
-
-//       return response.data
-//     } catch (error) {
-//       throw new Error(`Failed to list videos: ${error.response?.data?.message || error.message}`)
-//     }
-//   }
-
-//   /**
-//    * Update video details
-//    */
-//   public async updateVideo(
-//     videoId: string,
-//     updates: {
-//       title?: string
-//       collectionId?: string
-//       chapters?: any[]
-//       moments?: any[]
-//       metaTags?: any[]
-//     }
-//   ): Promise<BunnyVideoUploadResponse> {
-//     try {
-//       const response: AxiosResponse<BunnyVideoUploadResponse> = await axios.post(
-//         `${this.baseUrl}/library/${this.libraryId}/videos/${videoId}`,
-//         updates,
-//         {
-//           headers: {
-//             AccessKey: this.apiKey,
-//             'Content-Type': 'application/json',
-//           },
-//         }
-//       )
-
-//       return response.data
-//     } catch (error) {
-//       throw new Error(`Failed to update video: ${error.response?.data?.message || error.message}`)
-//     }
-//   }
-// }
+      console.log(`🗑️ Deleted video ${videoId} from database`);
+      return deletedVideo;
+    } catch (error) {
+      console.error(`Error deleting video ${videoId}:`, error);
+      throw error;
+    }
+  }
+}
