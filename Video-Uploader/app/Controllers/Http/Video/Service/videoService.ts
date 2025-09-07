@@ -14,7 +14,7 @@ export default class videoService {
   }
 
   public async createVideo(body: any) {
-
+    try {
       // Upload video to Bunny.net
       const response = await axios.post(
         `${this.baseUrl}/library/${this.libraryId}/videos/fetch`,
@@ -30,56 +30,127 @@ export default class videoService {
       const bunnyResponse = response?.data;
 
       // Save video info to database
-      if (bunnyResponse && bunnyResponse.guid) {
+      if (bunnyResponse) {
         const video = await Video.create({
-          videoId: bunnyResponse.guid,
+          videoId: bunnyResponse?.id,
           libraryId: this.libraryId,
-          videoGuid: bunnyResponse.guid,
-          title: body.title || 'Untitled Video',
-          description: body.description || null,
-          originalFilename: body.originalFilename || null,
-          isFinished: false,
+          title: body.title || "Untitled Video",
+          isFinished: "uploading",
           processingStatus: 0, // 0 = queued/uploading
-          metadata: bunnyResponse
+          metadata: bunnyResponse,
         });
 
         return {
           ...bunnyResponse,
           databaseId: video.id,
-          savedToDatabase: true
+          savedToDatabase: true,
         };
       }
 
       return bunnyResponse;
-    } 
+    } catch (error) {
+      console.error("Error creating video:", error);
+      throw error;
+    }
+  }
 
-  public async updateVideo(id: string, body: Object) {
-    const response = await axios.post(
-      `${this.baseUrl}/library/${this.libraryId}/videos/${id}`,
-      body,
-      {
-        headers: {
-          AccessKey: this.apiKey,
-          "Content-Type": "application/json",
-        },
+  public async updateVideo(id: string, body: any) {
+    try {
+      // Update video in Bunny.net
+      const response = await axios.post(
+        `${this.baseUrl}/library/${this.libraryId}/videos/${id}`,
+        body,
+        {
+          headers: {
+            AccessKey: this.apiKey,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const bunnyResponse = response?.data;
+
+      // Also update video in our MySQL database
+      const video = await Video.findBy("videoId", id);
+      if (video) {
+        // Update fields that might have changed
+        if (body.title) video.title = body.title;
+
+        // Update metadata with the response from Bunny.net
+        video.metadata = { ...video.metadata, ...bunnyResponse };
+
+        await video.save();
+
+        console.log(
+          `✅ Updated video ${id} in both Bunny.net and MySQL database`
+        );
+
+        return {
+          ...bunnyResponse,
+          databaseUpdated: true,
+          databaseId: video.id,
+        };
+      } else {
+        console.warn(
+          `⚠️ Video ${id} updated in Bunny.net but not found in local database`
+        );
+        return {
+          ...bunnyResponse,
+          databaseUpdated: false,
+          warning: "Video not found in local database",
+        };
       }
-    );
-
-    return response?.data;
+    } catch (error) {
+      console.error("Error updating video:", error);
+      throw error;
+    }
   }
 
   public async deleteVideo(id: string) {
-    const response = await axios.delete(
-      `${this.baseUrl}/library/${this.libraryId}/videos/${id}`,
-      {
-        headers: {
-          AccessKey: this.apiKey,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    try {
+      // First check if video exists in our database
+      const video = await Video.findBy("videoId", id);
 
-    return response?.data;
+      // Delete video from Bunny.net
+      const response = await axios.delete(
+        `${this.baseUrl}/library/${this.libraryId}/videos/${id}`,
+        {
+          headers: {
+            AccessKey: this.apiKey,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const bunnyResponse = response?.data;
+
+      // Also delete video from our MySQL database
+      if (video) {
+        await video.delete();
+        console.log(
+          `✅ Deleted video ${id} from both Bunny.net and MySQL database`
+        );
+
+        return {
+          ...bunnyResponse,
+          databaseDeleted: true,
+          deletedDatabaseId: video.id,
+          deletedTitle: video.title,
+        };
+      } else {
+        console.warn(
+          `⚠️ Video ${id} deleted from Bunny.net but was not found in local database`
+        );
+        return {
+          ...bunnyResponse,
+          databaseDeleted: false,
+          warning: "Video was not found in local database",
+        };
+      }
+    } catch (error) {
+      console.error("Error deleting video:", error);
+      throw error;
+    }
   }
 
   public async getSingleVideo(id: string) {
@@ -95,68 +166,74 @@ export default class videoService {
 
     return response?.data;
   }
-  public async getAllVideo() {
-    const response = await axios.get(
-      `${this.baseUrl}/library/${this.libraryId}/videos`,
-      {
-        headers: {
-          AccessKey: this.apiKey,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+  public async getAllVideoFromBunnyDatabase() {
+    try {
+      const response = await axios.get(
+        `${this.baseUrl}/library/${this.libraryId}/videos`,
+        {
+          headers: {
+            AccessKey: this.apiKey,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-    return response?.data;
+      return response?.data;
+    } catch (error) {
+      console.error("Error getting all videos from database:", error);
+      throw error;
+    }
   }
 
   // Webhook handling methods
-  public async updateVideoStatus(videoGuid: string, status: number, additionalData: any = {}) {
+  public async updateVideoStatus(
+    videoGuid: string,
+    status: number,
+    additionalData: any = {}
+  ) {
     try {
-      const video = await Video.findBy('videoGuid', videoGuid);
-      
+      // Try to find by videoId first (which stores the Bunny.net video ID/GUID)
+      const video = await Video.findBy("videoId", videoGuid);
+
       if (video) {
         video.processingStatus = status;
-        video.isFinished = status === 3; // Status 3 means finished processing
-        
-        // Update additional fields if provided
-        if (additionalData.duration) video.duration = additionalData.duration;
-        if (additionalData.thumbnailUrl) video.thumbnailUrl = additionalData.thumbnailUrl;
-        if (additionalData.videoUrl) video.videoUrl = additionalData.videoUrl;
-        if (additionalData.fileSize) video.fileSize = additionalData.fileSize;
-        
+        video.isFinished = status === 3 ? "success" : "failed"; // Status 3 means finished processing
+
         // Update metadata
         if (additionalData.metadata) {
           video.metadata = { ...video.metadata, ...additionalData.metadata };
         }
-        
+
         await video.save();
-        
-        console.log(`Updated video ${videoGuid} status to ${status}`);
+
+        console.log(
+          `Updated video ${videoGuid} status to ${status} - isFinished: ${video.isFinished}`
+        );
         return video;
       } else {
         console.warn(`Video with GUID ${videoGuid} not found in database`);
         return null;
       }
     } catch (error) {
-      console.error('Error updating video status:', error);
+      console.error("Error updating video status:", error);
       throw error;
     }
   }
 
   public async getVideoByGuid(videoGuid: string) {
     try {
-      return await Video.findBy('videoGuid', videoGuid);
+      return await Video.findBy("videoId", videoGuid);
     } catch (error) {
-      console.error('Error getting video by GUID:', error);
+      console.error("Error getting video by GUID:", error);
       throw error;
     }
   }
 
-  public async getAllVideosFromDatabase() {
+  public async getAllVideosFromMyDatabase() {
     try {
       return await Video.all();
     } catch (error) {
-      console.error('Error getting all videos from database:', error);
+      console.error("Error getting all videos from database:", error);
       throw error;
     }
   }
