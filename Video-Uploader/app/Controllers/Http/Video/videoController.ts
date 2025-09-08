@@ -1,11 +1,11 @@
 import type { HttpContextContract } from "@ioc:Adonis/Core/HttpContext";
-import videoService from "../Service/videoService";
-import { 
-  CreateVideoValidator, 
-  UpdateVideoValidator, 
-  VideoIdValidator, 
-  WebhookValidator 
-} from "../Validator/videoValidator";
+import videoService from "./videoService";
+import {
+  CreateVideoValidator,
+  UpdateVideoValidator,
+  VideoIdValidator,
+  WebhookValidator,
+} from "./videoValidator";
 
 export default class videoController {
   private service: videoService;
@@ -15,14 +15,12 @@ export default class videoController {
   //get all video
   public async index({ response }: HttpContextContract) {
     try {
-    
       // Get videos from both Bunny.net and our database
       const promises = [
         this.service.getAllVideoFromBunnyDatabase(),
         this.service.getAllVideosFromMyDatabase(),
       ];
 
-      
       const results = await Promise.all(promises);
       const [bunnyVideos, databaseVideos, stats] = results;
 
@@ -31,7 +29,7 @@ export default class videoController {
         databaseVideos,
         totalInDatabase: databaseVideos.length,
       };
-      
+
       // Add statistics if requested
       if (stats) {
         responseData.statistics = stats;
@@ -55,7 +53,7 @@ export default class videoController {
       // Validate video ID parameter
       await request.validate({
         schema: VideoIdValidator,
-        data: { id: params.id }
+        data: { id: params.id },
       });
 
       const getResult = await this.service.getSingleVideo(params.id);
@@ -66,7 +64,7 @@ export default class videoController {
       });
     } catch (error) {
       console.error("Error fetching video:", error);
-      
+
       // Handle validation errors
       if (error.messages) {
         return response.status(422).json({
@@ -87,6 +85,13 @@ export default class videoController {
       // Validate request body
       const validatedData = await request.validate({
         schema: CreateVideoValidator,
+        messages: {
+          "url.required": "The video URL is required.",
+          "url.string": "The video URL must be a string.",
+          "url.url": "The video URL must be a valid URL.",
+          "url.maxLength":
+            "The video URL is too long (maximum is 2048 characters).",
+        },
       });
 
       const uploadResult = await this.service.createVideo(validatedData);
@@ -97,7 +102,7 @@ export default class videoController {
       });
     } catch (error) {
       console.error("Error uploading video:", error);
-      
+
       // Handle validation errors
       if (error.messages) {
         return response.status(422).json({
@@ -118,7 +123,7 @@ export default class videoController {
       // Validate video ID parameter
       await request.validate({
         schema: VideoIdValidator,
-        data: { id: params.id }
+        data: { id: params.id },
       });
 
       // Validate request body
@@ -126,7 +131,10 @@ export default class videoController {
         schema: UpdateVideoValidator,
       });
 
-      const updateResult = await this.service.updateVideo(params.id, validatedData);
+      const updateResult = await this.service.updateVideo(
+        params.id,
+        validatedData
+      );
 
       return response.status(200).json({
         message: "video info updated successfully!",
@@ -134,7 +142,7 @@ export default class videoController {
       });
     } catch (error) {
       console.error("Error updating video:", error);
-      
+
       // Handle validation errors
       if (error.messages) {
         return response.status(422).json({
@@ -155,7 +163,7 @@ export default class videoController {
       // Validate video ID parameter
       await request.validate({
         schema: VideoIdValidator,
-        data: { id: params.id }
+        data: { id: params.id },
       });
 
       const deleteResult = await this.service.deleteVideo(params.id);
@@ -166,7 +174,7 @@ export default class videoController {
       });
     } catch (error) {
       console.error("Error deleting video:", error);
-      
+
       // Handle validation errors
       if (error.messages) {
         return response.status(422).json({
@@ -184,39 +192,41 @@ export default class videoController {
 
   public async webhook({ request, response }: HttpContextContract) {
     try {
-        console.log("Webhook received:");
-        console.log(request.all());
+      console.log("Webhook received:");
+      console.log(request.all());
 
-        // Validate webhook data
-        const validatedData = await request.validate({
-            schema: WebhookValidator,
+      // Validate webhook data
+      const validatedData = await request.validate({
+        schema: WebhookValidator,
+      });
+
+      const { VideoGuid, Status } = validatedData;
+
+      console.log("----------status----------", Status);
+
+      if (Status === 5 || Status === 4) {
+        console.log(`Video ${VideoGuid} finished processing!`);
+
+        // Update the video status in database
+        await this.service.updateVideoStatus(VideoGuid, Status, {
+          metadata: validatedData,
         });
+      }
 
-        const { VideoGuid, Status } = validatedData;
-
-        if (Status === 3 || Status === 5) {
-            console.log(`Video ${VideoGuid} finished processing!`);
-
-            // Update the video status in database
-            await this.service.updateVideoStatus(VideoGuid, Status, {
-            metadata: validatedData,
-            });
-        }
-
-        // Respond 200 OK to Bunny.net
-        return response.status(200).send("OK");
+      // Respond 200 OK to Bunny.net
+      return response.status(200).send("OK");
     } catch (error) {
-        console.error("❌ Error processing webhook:", error);
-        
-        // Handle validation errors for webhooks
-        if (error.messages) {
-            console.error("Webhook validation failed:", error.messages);
-            // Still respond 200 OK to prevent Bunny.net from retrying invalid webhooks
-            return response.status(200).send("OK");
-        }
-        
-        // Still respond 200 OK to prevent Bunny.net from retrying
+      console.error("❌ Error processing webhook:", error);
+
+      // Handle validation errors for webhooks
+      if (error.messages) {
+        console.error("Webhook validation failed:", error.messages);
+        // Still respond 200 OK to prevent Bunny.net from retrying invalid webhooks
         return response.status(200).send("OK");
+      }
+
+      // Still respond 200 OK to prevent Bunny.net from retrying
+      return response.status(200).send("OK");
     }
   }
 }

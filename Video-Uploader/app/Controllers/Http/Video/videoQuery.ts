@@ -29,8 +29,7 @@ export default class VideoQuery {
 
   public async findByVideoId(videoId: string): Promise<Video | null> {
     try {
-      const video = await Video.findBy("videoId", videoId);
-      return video;
+      return await Video.query().where("videoId", videoId).first();
     } catch (error) {
       console.error(`Error finding video by videoId ${videoId}:`, error);
       throw error;
@@ -48,16 +47,10 @@ export default class VideoQuery {
   }
 
   public async getAllVideos(): Promise<Video[]> {
-    try {
-      let query = Video.query();
 
-      const videos = await query;
-      console.log(`📊 Retrieved ${videos.length} videos from database`);
-      return videos;
-    } catch (error) {
-      console.error("Error getting all videos from database:", error);
-      throw error;
-    }
+      let query = Video.query();
+      return  await query;
+
   }
 
 
@@ -113,19 +106,26 @@ export default class VideoQuery {
 
       video.processingStatus = status;
       video.isFinished =
-        status === 3 ? "success" : status === 5 ? "failed" : "processing";
+        status === 3 || status==4 ? "success" : status === 5 ? "failed" : "processing";
 
       // Update metadata
       if (additionalData.metadata) {
         video.metadata = { ...video.metadata, ...additionalData.metadata };
       }
 
-      if(additionalData.category) {
-        video.category =additionalData.category ;
-      }
-
-      if(additionalData.duration) {
-        video.duration = additionalData.duration;
+      // Store additional data in metadata instead of separate columns
+      if (additionalData.playLink || additionalData.category || additionalData.duration) {
+        const metadataUpdate = {
+          ...video.metadata,
+          ...additionalData.metadata,
+        };
+        
+        // Add playLink to metadata if provided
+        if (additionalData.playLink) {
+          metadataUpdate.playLink = additionalData.playLink;
+        }
+        
+        video.metadata = metadataUpdate;
       }
 
       // Save changes

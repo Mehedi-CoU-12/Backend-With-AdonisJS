@@ -4,8 +4,8 @@ Route.group(() => {
   Route.post("/create", "videoController.store");
   Route.get("/get-all-video", "videoController.index");
   Route.get("/get-single-video/:id", "videoController.show");
-  Route.put("/update/:id", "videoController.update");
-  Route.delete("/delete/:id", "videoController.destroy");
+  Route.post("/update/:id", "videoController.update");
+  Route.post("/delete/:id", "videoController.destroy");
 
   // Webhook endpoint for external services (like Bunny.net)
   Route.post('/bunny-webhook', "videoController.webhook");

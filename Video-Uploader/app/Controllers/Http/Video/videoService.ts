@@ -1,6 +1,6 @@
 import Env from "@ioc:Adonis/Core/Env";
 import axios from "axios";
-import VideoQuery from "../Query/videoQuery";
+import VideoQuery from "./videoQuery";
 
 export default class videoService {
   private apiKey: string;
@@ -124,7 +124,7 @@ export default class videoService {
 
       // Also delete video from our MySQL database using query layer
       const deletedVideo = await this.videoQuery.deleteByVideoId(id);
-      
+
       if (deletedVideo) {
         console.log(
           `✅ Deleted video ${id} from both Bunny.net and MySQL database`
@@ -163,7 +163,7 @@ export default class videoService {
           },
         }
       );
-  
+
       return response?.data;
     } catch (error) {
       console.error("Error getting single video from Bunny.net:", error);
@@ -198,21 +198,24 @@ export default class videoService {
     try {
       // Use query layer to update video status
 
-      const getCategoryAndDurationFromBunny = await axios.get(
-        `${this.baseUrl}/library/${this.libraryId}/videos/${videoGuid}`,
-        {
-          headers: {
-            AccessKey: this.apiKey,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      
-      if (getCategoryAndDurationFromBunny?.data) {
-        additionalData.category = getCategoryAndDurationFromBunny?.data?.category;
-        additionalData.duration = getCategoryAndDurationFromBunny?.data?.length;
-      }
-      
+      // const getCategoryAndDurationFromBunny = await axios.get(
+      //   `${this.baseUrl}/library/${this.libraryId}/videos/${videoGuid}`,
+      //   {
+      //     headers: {
+      //       AccessKey: this.apiKey,
+      //       "Content-Type": "application/json",
+      //     },
+      //   }
+      // );
+
+      // if (getCategoryAndDurationFromBunny?.data) {
+      //   additionalData.category = getCategoryAndDurationFromBunny?.data?.category;
+      //   additionalData.duration = getCategoryAndDurationFromBunny?.data?.length;
+      // }
+
+      const videoPlayLinkUrl = `https://iframe.mediadelivery.net/play/${this.libraryId}/${videoGuid}`;
+      additionalData.playLink = videoPlayLinkUrl;
+
       const video = await this.videoQuery.updateVideoStatus(
         videoGuid,
         status,
@@ -235,11 +238,6 @@ export default class videoService {
   }
 
   public async getAllVideosFromMyDatabase() {
-    try {
-      return await this.videoQuery.getAllVideos();
-    } catch (error) {
-      console.error("Error getting all videos from database:", error);
-      throw error;
-    }
+    return await this.videoQuery.getAllVideos();
   }
 }

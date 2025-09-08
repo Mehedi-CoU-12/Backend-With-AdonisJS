@@ -21,6 +21,7 @@ export const CreateVideoValidator = schema.create({
   collectionId: schema.string.optional({}, [
     rules.uuid()
   ])
+  
 });
 
 // Validator for updating video information
@@ -62,4 +63,5 @@ export const WebhookValidator = schema.create({
   ThumbnailUrl: schema.string.optional(),
   PreviewUrl: schema.string.optional(),
   category: schema.string.optional(),
+  playLink: schema.string.optional(),
 });
