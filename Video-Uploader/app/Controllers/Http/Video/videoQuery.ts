@@ -1,3 +1,4 @@
+import { Exception } from "@adonisjs/core/build/standalone";
 import Video from "App/Models/Video";
 
 export default class VideoQuery {
@@ -7,52 +8,31 @@ export default class VideoQuery {
     title?: string;
     isFinished?: string;
     processingStatus?: number;
-    metadata?: any;
   }): Promise<Video> {
-    try {
+    
       const video = await Video.create({
         videoId: data.videoId,
         libraryId: data.libraryId,
         title: data.title || "Untitled Video",
         isFinished: data.isFinished || "uploading",
         processingStatus: data.processingStatus || 0,
-        metadata: data.metadata || null,
       });
 
-      console.log(`✅ Created video record with ID: ${video.id}`);
       return video;
-    } catch (error) {
-      console.error("Error creating video in database:", error);
-      throw error;
-    }
   }
 
   public async findByVideoId(videoId: string): Promise<Video | null> {
-    try {
-      return await Video.query().where("videoId", videoId).first();
-    } catch (error) {
-      console.error(`Error finding video by videoId ${videoId}:`, error);
-      throw error;
-    }
+    return await Video.query().select('video_id',videoId).where("videoId", videoId).first();
   }
 
   public async findById(id: number): Promise<Video | null> {
-    try {
-      const video = await Video.find(id);
-      return video;
-    } catch (error) {
-      console.error(`Error finding video by ID ${id}:`, error);
-      throw error;
-    }
+    return await Video.query().select('id').where('id',id).first();
   }
 
   public async getAllVideos(): Promise<Video[]> {
-
-      let query = Video.query();
-      return  await query;
-
+    let query = Video.query();
+    return await query;
   }
-
 
   public async updateByVideoId(
     videoId: string,
@@ -63,7 +43,7 @@ export default class VideoQuery {
       metadata?: any;
     }
   ): Promise<Video | null> {
-    try {
+    
       const video = await this.findByVideoId(videoId);
 
       if (!video) {
@@ -81,84 +61,43 @@ export default class VideoQuery {
         video.metadata = { ...video.metadata, ...updateData.metadata };
       }
 
-      await video.save();
-      console.log(`✅ Updated video ${videoId} in database`);
-      return video;
-    } catch (error) {
-      console.error(`Error updating video ${videoId}:`, error);
-      throw error;
-    }
+      return await video.save();
   }
-
 
   public async updateVideoStatus(
     videoGuid: string,
     status: number,
     additionalData: any = {}
   ): Promise<Video | null> {
-    try {
-      const video = await this.findByVideoId(videoGuid);
+    const video = await this.findByVideoId(videoGuid);
 
-      if (!video) {
-        console.warn(`⚠️ Video with GUID ${videoGuid} not found in database`);
-        return null;
-      }
-
-      video.processingStatus = status;
-      video.isFinished =
-        status === 3 || status==4 ? "success" : status === 5 ? "failed" : "processing";
-
-      // Update metadata
-      if (additionalData.metadata) {
-        video.metadata = { ...video.metadata, ...additionalData.metadata };
-      }
-
-      // Store additional data in metadata instead of separate columns
-      if (additionalData.playLink || additionalData.category || additionalData.duration) {
-        const metadataUpdate = {
-          ...video.metadata,
-          ...additionalData.metadata,
-        };
-        
-        // Add playLink to metadata if provided
-        if (additionalData.playLink) {
-          metadataUpdate.playLink = additionalData.playLink;
-        }
-        
-        video.metadata = metadataUpdate;
-      }
-
-      // Save changes
-
-      await video.save();
-
-      console.log(
-        `✅ Updated video ${videoGuid} status to ${status} - isFinished: ${video.isFinished}`
-      );
-      return video;
-    } catch (error) {
-      console.error(`Error updating video status for ${videoGuid}:`, error);
-      throw error;
+    if (!video) {
+      console.warn(`⚠️ Video with GUID ${videoGuid} not found in database`);
+      return null;
     }
+
+    video.processingStatus = status;
+    video.isFinished = additionalData.status;
+    video.playLink = additionalData.playLink;
+
+    // Save changes
+    return await video.save();
   }
 
   public async deleteByVideoId(videoId: string): Promise<Video | null> {
-    try {
-      const video = await this.findByVideoId(videoId);
+    const video = await this.findByVideoId(videoId);
 
-      if (!video) {
-        console.warn(`⚠️ Video with videoId ${videoId} not found for deletion`);
-        return null;
-      }
-
-      const deletedVideo = { ...video.toJSON() } as Video; // Keep copy before deletion
-      await video.delete();
-
-      console.log(`🗑️ Deleted video ${videoId} from database`);
-      return deletedVideo;
-    } catch (error) {
-      console.error(`Error deleting video ${videoId}:`, error);
-      throw error;
+    if (!video) {
+      throw new Exception(
+        `Video with videoId ${videoId} not found`,
+        404,
+        "E_NOT_FOUND"
+      );
     }
+
+    const deletedVideo = { ...video.toJSON() } as Video; // Keep copy before deletion
+    await video.delete();
+
+    return deletedVideo;
   }
 }

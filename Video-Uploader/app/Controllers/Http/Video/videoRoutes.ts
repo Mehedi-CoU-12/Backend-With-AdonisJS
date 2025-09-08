@@ -12,4 +12,4 @@ Route.group(() => {
 
 })
   .prefix("api/v1")
-  .namespace("App/Controllers/Http/Video/Controller");
+  .namespace("App/Controllers/Http/Video/");
