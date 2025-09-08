@@ -1,6 +1,5 @@
 import Env from "@ioc:Adonis/Core/Env";
 import axios from "axios";
-import Video from "App/Models/Video";
 import VideoQuery from "../Query/videoQuery";
 
 export default class videoService {
@@ -154,17 +153,22 @@ export default class videoService {
   }
 
   public async getSingleVideo(id: string) {
-    const response = await axios.get(
-      `${this.baseUrl}/library/${this.libraryId}/videos/${id}`,
-      {
-        headers: {
-          AccessKey: this.apiKey,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    return response?.data;
+    try {
+      const response = await axios.get(
+        `${this.baseUrl}/library/${this.libraryId}/videos/${id}`,
+        {
+          headers: {
+            AccessKey: this.apiKey,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+  
+      return response?.data;
+    } catch (error) {
+      console.error("Error getting single video from Bunny.net:", error);
+      throw error;
+    }
   }
   public async getAllVideoFromBunnyDatabase() {
     try {
@@ -180,7 +184,7 @@ export default class videoService {
 
       return response?.data;
     } catch (error) {
-      console.error("Error getting all videos from database:", error);
+      console.error("Error getting all videos from Bunny-database:", error);
       throw error;
     }
   }
@@ -193,6 +197,22 @@ export default class videoService {
   ) {
     try {
       // Use query layer to update video status
+
+      const getCategoryAndDurationFromBunny = await axios.get(
+        `${this.baseUrl}/library/${this.libraryId}/videos/${videoGuid}`,
+        {
+          headers: {
+            AccessKey: this.apiKey,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      
+      if (getCategoryAndDurationFromBunny?.data) {
+        additionalData.category = getCategoryAndDurationFromBunny?.data?.category;
+        additionalData.duration = getCategoryAndDurationFromBunny?.data?.length;
+      }
+      
       const video = await this.videoQuery.updateVideoStatus(
         videoGuid,
         status,

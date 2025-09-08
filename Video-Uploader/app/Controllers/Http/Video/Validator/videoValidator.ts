@@ -57,8 +57,9 @@ export const WebhookValidator = schema.create({
   // Optional webhook fields
   VideoLibraryId: schema.number.optional(),
   Title: schema.string.optional(),
-  Length: schema.number.optional(),
+  length: schema.number.optional(),
   VideoUrl: schema.string.optional(),
   ThumbnailUrl: schema.string.optional(),
-  PreviewUrl: schema.string.optional()
+  PreviewUrl: schema.string.optional(),
+  category: schema.string.optional(),
 });

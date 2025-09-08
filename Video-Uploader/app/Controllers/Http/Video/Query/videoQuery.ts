@@ -120,6 +120,16 @@ export default class VideoQuery {
         video.metadata = { ...video.metadata, ...additionalData.metadata };
       }
 
+      if(additionalData.category) {
+        video.category =additionalData.category ;
+      }
+
+      if(additionalData.duration) {
+        video.duration = additionalData.duration;
+      }
+
+      // Save changes
+
       await video.save();
 
       console.log(

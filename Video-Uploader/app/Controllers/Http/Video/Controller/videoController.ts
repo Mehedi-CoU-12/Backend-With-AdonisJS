@@ -13,7 +13,7 @@ export default class videoController {
     this.service = new videoService();
   }
   //get all video
-  public async index({ request, response }: HttpContextContract) {
+  public async index({ response }: HttpContextContract) {
     try {
     
       // Get videos from both Bunny.net and our database

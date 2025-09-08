@@ -26,6 +26,12 @@ export default class Video extends BaseModel {
   })
   public metadata: any | null
 
+  @column()
+  public duration: number | null
+
+  @column()
+  public category: string | null
+
   @column.dateTime({ autoCreate: true })
   public createdAt: DateTime
 
