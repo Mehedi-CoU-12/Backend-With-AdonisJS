@@ -1,90 +1,60 @@
 import type { HttpContextContract } from "@ioc:Adonis/Core/HttpContext";
 import videoService from "./videoService";
-import {
-  CreateVideoValidator,
-  UpdateVideoValidator,
-  VideoIdValidator,
-  WebhookValidator,
-} from "./videoValidator";
+import VideoValidator from "./videoValidator";
 
 export default class videoController {
   private service: videoService;
+  private validator: VideoValidator;
   constructor() {
     this.service = new videoService();
+    this.validator = new VideoValidator();
   }
   //get all video
-  public async index({ response }: HttpContextContract) {
-    // Get videos from both Bunny.net and our database
-    const promises = [
-      this.service.getAllVideoFromBunnyDatabase(),
-      this.service.getAllVideosFromMyDatabase(),
-    ];
-
-    const results = await Promise.all(promises);
-    const [bunnyVideos, databaseVideos, stats] = results;
-
-    let responseData: any = {
-      bunnyVideos,
-      databaseVideos,
-      totalInDatabase: databaseVideos.length,
-    };
-
-    // Add statistics if requested
-    if (stats) {
-      responseData.statistics = stats;
-    }
-
-    return response.status(200).json(responseData);
+  public async index() {
+    return await this.service.getAllVideo();
   }
   //get single video
-  public async show({ params, request, response }: HttpContextContract) {
-    
-    request.all().id=params.id;
-    const payload = await request.validate(VideoIdValidator)
+  public async show(ctx: HttpContextContract) {
+    const payload = await this.validator.videoIdValidator(ctx);
 
     const getResult = await this.service.getSingleVideo(payload);
 
-    return response.status(200).json(getResult);
+    return ctx.response.status(200).json({ success: getResult });
   }
   //upload video
-  public async store({ request, response }: HttpContextContract) {
+  public async store(ctx: HttpContextContract) {
     // Validate request body
-    const validatedData = await request.validate(CreateVideoValidator);
+    const payload = await this.validator.createVideoValidator(ctx);
 
-    const uploadResult = await this.service.createVideo(validatedData);
+    const uploadResult = await this.service.createVideo(payload);
 
-    return response.status(201).json(uploadResult);
+    return ctx.response.status(201).json(uploadResult);
   }
   //update video
-  public async update({ params, request, response }: HttpContextContract) {
+  public async update(ctx: HttpContextContract) {
+    const payload = await this.validator.updateVideoValidator(ctx);
 
-      request.all().id=params.id;
-      const validatedData = await request.validate(UpdateVideoValidator);
+    const updateResult = await this.service.updateVideo(payload);
 
-      const updateResult = await this.service.updateVideo(validatedData);
-
-      return response.status(200).json( updateResult);
+    return ctx.response.status(200).json({ success: updateResult });
   }
   //delete video
-  public async destroy({ params, request, response }: HttpContextContract) {
-      request.all().id=params.id;
-      const payload=await request.validate(VideoIdValidator);
+  public async destroy(ctx: HttpContextContract) {
+    const payload = await this.validator.videoIdValidator(ctx);
 
-      const deleteResult = await this.service.deleteVideo(payload);
+    const deleteResult = await this.service.deleteVideo(payload);
 
-      return response.status(200).json(deleteResult);
+    return ctx.response.status(200).json(deleteResult);
   }
 
-  public async webhook({ request, response }: HttpContextContract) {
-      console.log("Webhook received:");
-      console.log(request.all());
+  //webhook for checking the status of the video
+  public async webhook(ctx: HttpContextContract) {
+    console.log(ctx.request.all());
 
-      const validatedData = await request.validate(WebhookValidator);
+    const payload = await this.validator.webhookValidator(ctx);
 
-        // Update the video status in database
-        await this.service.updateVideoStatus(validatedData);
+    await this.service.updateVideoStatus(payload);
 
-      // Respond 200 OK to Bunny.net
-      return response.status(200).send("OK");
+    return ctx.response.status(200).send("OK");
   }
 }
