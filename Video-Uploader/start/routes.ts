@@ -20,6 +20,7 @@
 
 import Route from '@ioc:Adonis/Core/Route'
 import '../app/Controllers/Http/Video/videoRoutes'
+import '../app/Controllers/Http/Database_lession/routes'
 
 Route.get('/', async () => {
   return { hello: 'world' }
