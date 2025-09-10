@@ -1,15 +1,15 @@
 import Route from "@ioc:Adonis/Core/Route";
 
 Route.group(() => {
-  Route.post("/create", "videoController.store");
-  Route.get("/get-all-video", "videoController.index");
-  Route.get("/get-single-video/:id", "videoController.show");
-  Route.post("/update/:id", "videoController.update");
-  Route.post("/delete/:id", "videoController.destroy");
+  Route.post("/create", "videoController.createVideo");
+  Route.get("/get-all-video", "videoController.getAllVideo");
+  Route.get("/get-single-video/:id", "videoController.getSingleVideo");
+  Route.post("/update/:id", "videoController.updateVideo");
+  Route.post("/delete/:id", "videoController.deleteVideo");
 
   // Webhook endpoint for external services (like Bunny.net)
-  Route.post('/bunny-webhook', "videoController.webhook");
+  Route.post('/bunny-webhook', "videoController.bunnyWebhook");
 
 })
-  .prefix("api/v1")
+  .prefix("api/v1/video")
   .namespace("App/Controllers/Http/Video/");

@@ -64,6 +64,15 @@ export default class videoService {
   }
 
   public async deleteVideo(payload: any) {
+    
+    //check if video is exist or not
+    const existingVideo = await this.videoQuery.findByVideoId(payload.id);
+
+    if (!existingVideo)
+      throw new Exception("Video Not Found!", 404, "E_VIDEO_NOT_FOUND");
+
+    // Also delete video from our MySQL database
+    const deletedVideo = await this.videoQuery.deleteByVideo(payload.id);
     const response = await this.deleteFromBunny(payload.id);
 
     if (response?.data?.success === "false")
@@ -73,13 +82,6 @@ export default class videoService {
         "E_INVALID_REQUEST"
       );
 
-    const existingVideo = await this.videoQuery.findByVideoId(payload.id);
-
-    if (!existingVideo)
-      throw new Exception("Video Not Found!", 404, "E_VIDEO_NOT_FOUND");
-
-    // Also delete video from our MySQL database
-    const deletedVideo = await this.videoQuery.deleteByVideo(payload.id);
 
     return {
       ...response,

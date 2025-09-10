@@ -10,20 +10,19 @@ export default class videoController {
     this.validator = new VideoValidator();
   }
   //get all video
-  public async index() {
+  public async getAllVideo() {
     return await this.service.getAllVideo();
   }
   //get single video
-  public async show(ctx: HttpContextContract) {
+  public async getSingleVideo(ctx: HttpContextContract) {
     const payload = await this.validator.videoIdValidator(ctx);
 
     const getResult = await this.service.getSingleVideo(payload);
 
-    return ctx.response.status(200).json({ success: getResult });
+    return ctx.response.status(200).json({ getResult });
   }
   //upload video
-  public async store(ctx: HttpContextContract) {
-    // Validate request body
+  public async createVideo(ctx: HttpContextContract) {
     const payload = await this.validator.createVideoValidator(ctx);
 
     const uploadResult = await this.service.createVideo(payload);
@@ -31,7 +30,7 @@ export default class videoController {
     return ctx.response.status(201).json(uploadResult);
   }
   //update video
-  public async update(ctx: HttpContextContract) {
+  public async updateVideo(ctx: HttpContextContract) {
     const payload = await this.validator.updateVideoValidator(ctx);
 
     const updateResult = await this.service.updateVideo(payload);
@@ -39,7 +38,7 @@ export default class videoController {
     return ctx.response.status(200).json({ success: updateResult });
   }
   //delete video
-  public async destroy(ctx: HttpContextContract) {
+  public async deleteVideo(ctx: HttpContextContract) {
     const payload = await this.validator.videoIdValidator(ctx);
 
     const deleteResult = await this.service.deleteVideo(payload);
@@ -48,7 +47,7 @@ export default class videoController {
   }
 
   //webhook for checking the status of the video
-  public async webhook(ctx: HttpContextContract) {
+  public async bunnyWebhook(ctx: HttpContextContract) {
     console.log(ctx.request.all());
 
     const payload = await this.validator.webhookValidator(ctx);
