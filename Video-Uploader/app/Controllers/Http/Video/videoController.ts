@@ -52,8 +52,8 @@ export default class videoController {
 
     const payload = await this.validator.webhookValidator(ctx);
 
-    await this.service.updateVideoStatus(payload);
+    const response=await this.service.updateVideoStatus(payload);
 
-    return ctx.response.status(200).send("OK");
+    return ctx.response.status(200).json({response});
   }
 }
