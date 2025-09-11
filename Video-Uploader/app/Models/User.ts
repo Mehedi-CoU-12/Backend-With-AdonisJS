@@ -7,10 +7,13 @@ import {
     hasMany,
     HasOne,
     hasOne,
+    ManyToMany,
+    manyToMany,
 } from "@ioc:Adonis/Lucid/Orm";
 import Profile from "./Profile";
 import Hash from "@ioc:Adonis/Core/Hash";
 import Post from "./Post";
+import Role from "./Role";
 
 export default class User extends BaseModel {
     public static table = "users";
@@ -36,6 +39,11 @@ export default class User extends BaseModel {
 
     @hasMany(() => Post)
     public post: HasMany<typeof Post>;
+
+    @manyToMany(()=>Role,{
+        pivotTable:'role_user'
+    })
+    public roles:ManyToMany<typeof Role>
 
     //hash the password before save
     @beforeSave()
