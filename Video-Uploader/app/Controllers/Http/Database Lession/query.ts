@@ -1,5 +1,6 @@
 import Profile from "App/Models/Profile";
 import User from "App/Models/User";
+import Post from "App/Models/Post";
 
 export default class Queries {
     //user
@@ -53,4 +54,37 @@ export default class Queries {
     }
 
     public async deleteProfile() {}
+
+    // post
+    public async createPost(
+        user: User,
+        body: {
+            status?: string;
+            imageUrl?: string;
+        }
+    ) {
+        return await user.related("post").create(body);
+    }
+
+    public async getSingleUserPost(id:string){
+        return await Post.query().where('user_id',id);
+    }
+
+    public async getAllUsersPosts(){
+        return await Post.query();
+    }
+
+    public async updatePost(
+        id: string,
+        body: {
+            status?: string;
+            imageUrl?: string;
+        }
+    ) {
+        return await Post.query().where("id", id).update(body);
+    }
+
+    public async deletePost(id: string) {
+        return await Post.query().where("id", id).delete();
+    }
 }

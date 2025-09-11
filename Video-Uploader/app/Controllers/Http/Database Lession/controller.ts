@@ -1,5 +1,6 @@
 import { HttpContextContract } from "@ioc:Adonis/Core/HttpContext";
 import Queries from "./query";
+import { Exception } from "@adonisjs/core/build/standalone";
 
 export default class Controller {
     private queries: Queries;
@@ -7,7 +8,7 @@ export default class Controller {
         this.queries = new Queries();
     }
 
-    //user 
+    //user
     public async createUser(ctx: HttpContextContract) {
         const { email, password } = ctx.request.all();
         const { fullName, avatarUrl } = ctx.request.all();
@@ -24,40 +25,76 @@ export default class Controller {
     }
 
     public async getSingleUser(ctx: HttpContextContract) {
-        const { id } = ctx.params.id;
-        return  await this.queries.getUserById(id);
+        const userId = ctx.params.id;
+        return await this.queries.getUserById(userId);
     }
 
     public async getAllUsers() {
-        return  await this.queries.getAllUsers();
+        return await this.queries.getAllUsers();
     }
 
     public async updateUser(ctx: HttpContextContract) {
-        const {email,password} = ctx.request.all();
-        const id = ctx.params.id;
+        const { email, password } = ctx.request.all();
+        const userId = ctx.params.id;
 
-        return await this.queries.updateUser(id,{email,password});
+        return await this.queries.updateUser(userId, { email, password });
     }
 
-    public async deleteUser(ctx:HttpContextContract) {
-        const id=ctx.params.id;
-        return await this.queries.deleteUser(id);
+    public async deleteUser(ctx: HttpContextContract) {
+        const userId = ctx.params.id;
+        return await this.queries.deleteUser(userId);
     }
 
-    //profile 
+    //profile
     public async getSingleProfile(ctx: HttpContextContract) {
-        const { id } = ctx.params.id;
-        return  await this.queries.getProfileById(id);
+        const userId = ctx.params.id;
+        return await this.queries.getProfileById(userId);
     }
 
     public async getAllProfiles() {
-        return  await this.queries.getAllProfiles();
+        return await this.queries.getAllProfiles();
     }
 
-    public async updateProfile(ctx:HttpContextContract){
-        const id=ctx.params.id;
-        const body=ctx.request.all();
+    public async updateProfile(ctx: HttpContextContract) {
+        const userId = ctx.params.id;
+        const body = ctx.request.all();
 
-        return await this.queries.updateProfile(id,body);
+        return await this.queries.updateProfile(userId, body);
+    }
+
+    //post
+    public async createPost(ctx: HttpContextContract) {
+        const userId = ctx.params.id;
+        const body = ctx.request.all();
+
+        const user = await this.queries.getUserById(userId);
+
+        if (!user)
+            throw new Exception("User Not Found!", 404, "E_INVALID_REQUEST");
+
+        return await this.queries.createPost(user, body);
+    }
+
+    public async getSingleUserPost(ctx: HttpContextContract) {
+        const userId = ctx.params.id;
+
+        return await this.queries.getSingleUserPost(userId);
+    }
+
+    public async getAllPosts() {
+        return await this.queries.getAllUsersPosts();
+    }
+
+    public async updatePost(ctx: HttpContextContract) {
+        const id = ctx.params.id;
+        const body = ctx.request.all();
+
+        return await this.queries.updatePost(id, body);
+    }
+
+    public async deletePost(ctx: HttpContextContract) {
+        const postId = ctx.params.id;
+
+        return await this.queries.deletePost(postId);
     }
 }

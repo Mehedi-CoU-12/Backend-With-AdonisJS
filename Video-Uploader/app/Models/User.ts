@@ -3,11 +3,14 @@ import {
     BaseModel,
     beforeSave,
     column,
+    HasMany,
+    hasMany,
     HasOne,
     hasOne,
 } from "@ioc:Adonis/Lucid/Orm";
 import Profile from "./Profile";
 import Hash from "@ioc:Adonis/Core/Hash";
+import Post from "./Post";
 
 export default class User extends BaseModel {
     public static table = "users";
@@ -31,19 +34,16 @@ export default class User extends BaseModel {
     @hasOne(() => Profile)
     public profile: HasOne<typeof Profile>;
 
+    @hasMany(() => Post)
+    public post: HasMany<typeof Post>;
+
     //hash the password before save
     @beforeSave()
     public static async hashPassword(user: User) {
-        console.log('beforeSave hook triggered');
-        console.log('password is dirty:', user.$dirty.password);
-        console.log('dirty fields:', Object.keys(user.$dirty));
-        
         if (user.$dirty.password) {
-            console.log('hashing password...');
             user.password = await Hash.make(user.password);
-            console.log('password hashed successfully');
         } else {
-            console.log('password not dirty, skipping hash');
+            console.log("password not dirty, skipping hash");
         }
     }
 }
