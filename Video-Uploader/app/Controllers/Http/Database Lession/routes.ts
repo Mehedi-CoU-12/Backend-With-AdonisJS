@@ -13,11 +13,13 @@ Route.group(() => {
     Route.post("/update-profile/:id","controller.updateProfile");
 
     //post
-    Route.get("/get-single-user-post/:id", "controller.getSingleUserPost");
+    Route.get("/get-single-user-post/:id", "controller.getUserPosts");
+    Route.get("get-single-post/:id","controller.getSinglePost")
     Route.get("/get-all-posts", "controller.getAllPosts");
     Route.post("/create-post/:id", "controller.createPost");
     Route.post("/delete-post/:id","controller.deletePost");
     Route.post("/update-post/:id","controller.updatePost");
+
 })
     .prefix("/api/v1/user")
     .namespace("App/Controllers/Http/Database Lession");

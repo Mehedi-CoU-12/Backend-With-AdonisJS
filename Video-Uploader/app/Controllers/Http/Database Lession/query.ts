@@ -66,8 +66,12 @@ export default class Queries {
         return await user.related("post").create(body);
     }
 
-    public async getSingleUserPost(id:string){
+    public async getUserPosts(id:string){
         return await Post.query().where('user_id',id);
+    }
+
+    public async getSinglePost(id:string){
+        return await Post.query().where('id',id);
     }
 
     public async getAllUsersPosts(){

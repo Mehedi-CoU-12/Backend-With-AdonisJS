@@ -37,11 +37,22 @@ export default class Controller {
         const { email, password } = ctx.request.all();
         const userId = ctx.params.id;
 
+        const user = await this.queries.getUserById(userId);
+
+        if (!user)
+            throw new Exception("User Not Found!", 404, "E_INVALID_REQUEST");
+
         return await this.queries.updateUser(userId, { email, password });
     }
 
     public async deleteUser(ctx: HttpContextContract) {
         const userId = ctx.params.id;
+
+        const user = await this.queries.getUserById(userId);
+
+        if (!user)
+            throw new Exception("User Not Found!", 404, "E_INVALID_REQUEST");
+
         return await this.queries.deleteUser(userId);
     }
 
@@ -59,6 +70,11 @@ export default class Controller {
         const userId = ctx.params.id;
         const body = ctx.request.all();
 
+        const user = await this.queries.getUserById(userId);
+
+        if (!user)
+            throw new Exception("User Not Found!", 404, "E_INVALID_REQUEST");
+
         return await this.queries.updateProfile(userId, body);
     }
 
@@ -75,10 +91,15 @@ export default class Controller {
         return await this.queries.createPost(user, body);
     }
 
-    public async getSingleUserPost(ctx: HttpContextContract) {
+    public async getUserPosts(ctx: HttpContextContract) {
         const userId = ctx.params.id;
 
-        return await this.queries.getSingleUserPost(userId);
+        return await this.queries.getUserPosts(userId);
+    }
+
+    public async getSinglePost(ctx: HttpContextContract) {
+        const postId = ctx.params.id;
+        return await this.queries.getSinglePost(postId);
     }
 
     public async getAllPosts() {
@@ -86,14 +107,24 @@ export default class Controller {
     }
 
     public async updatePost(ctx: HttpContextContract) {
-        const id = ctx.params.id;
+        const postId = ctx.params.id;
         const body = ctx.request.all();
 
-        return await this.queries.updatePost(id, body);
+        const post = await this.queries.getSinglePost(postId);
+
+        if (!post)
+            throw new Exception("Post Not Found!", 404, "E_INVALID_REQUEST");
+
+        return await this.queries.updatePost(postId, body);
     }
 
     public async deletePost(ctx: HttpContextContract) {
         const postId = ctx.params.id;
+
+        const post = await this.queries.getSinglePost(postId);
+
+        if (!post)
+            throw new Exception("Post Not Found!", 404, "E_INVALID_REQUEST");
 
         return await this.queries.deletePost(postId);
     }
