@@ -1,17 +1,17 @@
 import { DateTime } from "luxon";
 import {
-  BaseModel,
-  beforeSave,
-  column,
-  HasOne,
-  hasOne,
+    BaseModel,
+    beforeSave,
+    column,
+    HasOne,
+    hasOne,
 } from "@ioc:Adonis/Lucid/Orm";
 import Profile from "./Profile";
 import Hash from "@ioc:Adonis/Core/Hash";
 
 export default class User extends BaseModel {
-    public static table='users';
-    
+    public static table = "users";
+
     @column({ isPrimary: true })
     public id: number;
 
@@ -34,6 +34,16 @@ export default class User extends BaseModel {
     //hash the password before save
     @beforeSave()
     public static async hashPassword(user: User) {
-        if (user.$dirty.password) user.password = await Hash.make(user.password);
+        console.log('beforeSave hook triggered');
+        console.log('password is dirty:', user.$dirty.password);
+        console.log('dirty fields:', Object.keys(user.$dirty));
+        
+        if (user.$dirty.password) {
+            console.log('hashing password...');
+            user.password = await Hash.make(user.password);
+            console.log('password hashed successfully');
+        } else {
+            console.log('password not dirty, skipping hash');
+        }
     }
 }

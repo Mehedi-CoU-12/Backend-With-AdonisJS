@@ -8,11 +8,12 @@ export default class VideoValidator {
 
       schema: schema.create({
         id: schema.string({}, [rules.uuid()]),
-        title: schema.string.optional({}, [rules.maxLength(255)]),
+        title: schema.string.optional({}, [rules.maxLength(255),rules.minLength(1)]),
       }),
       messages: {
         "id.required": "Video ID is required",
         "title.maxLength": "Title must not exceed 255 characters",
+        "title.minLength":"Title must be at least 1 character long"
       },
     });
   }
