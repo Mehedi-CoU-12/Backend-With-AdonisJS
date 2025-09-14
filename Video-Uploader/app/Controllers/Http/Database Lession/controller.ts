@@ -144,4 +144,8 @@ export default class Controller {
     public async showAllRoles(ctx:HttpContextContract){
 
     }
+
+    public async showAllRolesWithUsers(ctx:HttpContextContract){
+        
+    }
 }
