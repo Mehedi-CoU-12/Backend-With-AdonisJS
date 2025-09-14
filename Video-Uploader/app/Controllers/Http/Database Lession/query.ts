@@ -1,6 +1,7 @@
 import Profile from "App/Models/Profile";
 import User from "App/Models/User";
 import Post from "App/Models/Post";
+import Role from "App/Models/Role";
 
 export default class Queries {
     //user
@@ -35,6 +36,11 @@ export default class Queries {
     public async getAllProfiles() {
         return await Profile.query();
     }
+
+    public async getAllProfilesWithUsers(){
+        return await Profile.query().preload('user');
+    }
+
     public async createProfile(
         user: User,
         body: {
@@ -46,7 +52,12 @@ export default class Queries {
     }
 
     public async getProfileById(id: string) {
-        return await Profile.query().where("user_id", id).first();
+        return await Profile.query().where("id", id).first();
+    }
+
+
+    public async getProfileByIdWithUser(id:string){
+        return await Profile.query().where("id",id).preload('user').first();
     }
 
     public async updateProfile(id: string, body: any) {
@@ -90,5 +101,22 @@ export default class Queries {
 
     public async deletePost(id: string) {
         return await Post.query().where("id", id).delete();
+    }
+
+
+
+
+
+
+
+
+
+    //roles
+    public async getAllRoles(){
+        return await Role.query();
+    }
+
+    public async getRolesWithUser(id:string){
+        return await Role.query().where('id',id).preload('users')
     }
 }

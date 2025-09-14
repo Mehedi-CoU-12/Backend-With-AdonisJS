@@ -58,12 +58,23 @@ export default class Controller {
 
     //profile
     public async getSingleProfile(ctx: HttpContextContract) {
-        const userId = ctx.params.id;
-        return await this.queries.getProfileById(userId);
+        const profileId = ctx.params.id;
+
+        return await this.queries.getProfileById(profileId);
+    }
+
+    public async getSingleProfileWithUser(ctx:HttpContextContract){
+        const profileId=ctx.params.id;
+
+        return await this.queries.getProfileByIdWithUser(profileId);
     }
 
     public async getAllProfiles() {
         return await this.queries.getAllProfiles();
+    }
+
+    public async getAllProfilesWithUsers(){
+        return await this.queries.getAllProfilesWithUsers();
     }
 
     public async updateProfile(ctx: HttpContextContract) {
@@ -127,5 +138,10 @@ export default class Controller {
             throw new Exception("Post Not Found!", 404, "E_INVALID_REQUEST");
 
         return await this.queries.deletePost(postId);
+    }
+
+    //Roles
+    public async showAllRoles(ctx:HttpContextContract){
+
     }
 }
