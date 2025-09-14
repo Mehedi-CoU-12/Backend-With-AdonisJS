@@ -116,7 +116,19 @@ export default class Queries {
         return await Role.query();
     }
 
-    public async getRolesWithUser(id:string){
+    public async showAllRolesWithUsers(){
+        return await Role.query().preload('users');
+    }
+
+    public async getSingleRoleWithUsers(id:string){
         return await Role.query().where('id',id).preload('users')
+    }
+
+    public async createRole(body:any){
+        return await Role.create(body);
+    }
+
+    public async attatchedRole(user:User,roleId:string){
+        return await user.related('roles').attach([roleId])
     }
 }

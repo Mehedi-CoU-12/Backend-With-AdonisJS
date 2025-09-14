@@ -63,8 +63,8 @@ export default class Controller {
         return await this.queries.getProfileById(profileId);
     }
 
-    public async getSingleProfileWithUser(ctx:HttpContextContract){
-        const profileId=ctx.params.id;
+    public async getSingleProfileWithUser(ctx: HttpContextContract) {
+        const profileId = ctx.params.id;
 
         return await this.queries.getProfileByIdWithUser(profileId);
     }
@@ -73,7 +73,7 @@ export default class Controller {
         return await this.queries.getAllProfiles();
     }
 
-    public async getAllProfilesWithUsers(){
+    public async getAllProfilesWithUsers() {
         return await this.queries.getAllProfilesWithUsers();
     }
 
@@ -141,11 +141,32 @@ export default class Controller {
     }
 
     //Roles
-    public async showAllRoles(ctx:HttpContextContract){
-
+    public async showAllRoles() {
+        return await this.queries.getAllRoles();
     }
 
-    public async showAllRolesWithUsers(ctx:HttpContextContract){
-        
+    public async getAllRolesWithUsers(){
+        return await this.queries.showAllRolesWithUsers();
+    }
+
+    public async getSingleRoleWithUsers(ctx: HttpContextContract) {
+        const roleId  = ctx.params.id;
+        return await this.queries.getSingleRoleWithUsers(roleId);
+    }
+
+    public async createRole(ctx: HttpContextContract) {
+        const body = ctx.request.all();
+        return await this.queries.createRole(body);
+    }
+
+    public async assingnedRolesToUser(ctx: HttpContextContract) {
+        const { userId, roleId } = ctx.request.all();
+
+        const user = await this.queries.getUserById(userId);
+
+        if (!user)
+            throw new Exception("User Not Found!", 404, "E_INVALID_REQUEST");
+
+        return await this.queries.attatchedRole(user, roleId);
     }
 }

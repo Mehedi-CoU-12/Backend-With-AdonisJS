@@ -7,8 +7,7 @@ Route.group(() => {
     Route.post("/delete-user/:id","controller.deleteUser");
     Route.post("/update-user/:id","controller.updateUser");
 
-    Route.get('/get-single-user-roles/:id',"controller")
-    Route.post('/update-user-role',"controller")
+    Route.get('/get-single-user-roles/:id',"controller");
 
     //profile
     Route.get("/get-single-profile/:id", "controller.getSingleProfile");
@@ -26,11 +25,12 @@ Route.group(() => {
     Route.post("/update-post/:id","controller.updatePost");
 
     //roles
-    Route.get('/get-all-roles','controller');
-    Route.get('/get-all-roles-users','controller');
+    Route.get('/get-all-roles','controller.showAllRoles');
+    Route.get('/get-all-roles-users','controller.getAllRolesWithUsers');
     Route.get('/get-single-role/:id','controller');
-    Route.get('/get-single-role-user/:id','controller');
-    Route.post('/create-role','controller');
+    Route.get('/get-single-role-users/:id','controller.getSingleRoleWithUsers');
+    Route.post('/create-role','controller.createRole');
+    Route.post('/assigned-role','controller.assingnedRolesToUser')
     Route.post('/update-role/:id','controller');
     Route.post('/delete-role/:id','controller');
 
