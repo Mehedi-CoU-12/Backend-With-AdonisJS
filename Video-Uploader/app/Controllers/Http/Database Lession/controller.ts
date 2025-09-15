@@ -29,6 +29,11 @@ export default class Controller {
         return await this.queries.getUserById(userId);
     }
 
+    public async getSingleUserWithRoles(ctx: HttpContextContract) {
+        const userId = ctx.params.id;
+        return await this.queries.getUserByIdWithRoles(userId);
+    }
+
     public async getAllUsers() {
         return await this.queries.getAllUsers();
     }
@@ -145,6 +150,11 @@ export default class Controller {
         return await this.queries.getAllRoles();
     }
 
+    public async getRole(ctx:HttpContextContract){
+        const roleId=ctx.params.id;
+        return await this.queries.getRoleById(roleId)
+    }
+
     public async getAllRolesWithUsers(){
         return await this.queries.showAllRolesWithUsers();
     }
@@ -159,6 +169,13 @@ export default class Controller {
         return await this.queries.createRole(body);
     }
 
+    public async updateRole(ctx:HttpContextContract){
+        const roleId=ctx.params.id;
+        const body=ctx.request.all();
+
+        return await this.queries.updateRoleById(roleId,body);
+    }
+
     public async assingnedRolesToUser(ctx: HttpContextContract) {
         const { userId, roleId } = ctx.request.all();
 
@@ -168,5 +185,27 @@ export default class Controller {
             throw new Exception("User Not Found!", 404, "E_INVALID_REQUEST");
 
         return await this.queries.attatchedRole(user, roleId);
+    }
+
+    public async detatchRoleFromUser(ctx: HttpContextContract) {
+        const { userId, roleId } = ctx.request.all();
+
+        const user = await this.queries.getUserById(userId);
+
+        if (!user)
+            throw new Exception("User Not Found!", 404, "E_INVALID_REQUEST");
+
+        return await this.queries.detatchRole(user, roleId);
+    }
+
+    public async deleteRole(ctx:HttpContextContract){
+        const roleId=ctx.params.id;
+
+        const role=await this.queries.getRoleById(roleId);
+
+        if(!role)
+            throw new Exception("Role Not Found!",404,"E_INVALID_REQUEST");
+
+        return await this.queries.deleteRoleById(roleId);
     }
 }

@@ -9,6 +9,10 @@ export default class Queries {
         return await User.query();
     }
 
+    public async getUserByIdWithRoles(id:string){
+        return await User.query().where('id',id).preload('roles');
+    }
+
     public async createUser(body: { email: string; password: string }) {
         return await User.create(body);
     }
@@ -116,6 +120,10 @@ export default class Queries {
         return await Role.query();
     }
 
+    public async getRoleById(id:string){
+        return await Role.query().where('id',id);
+    }
+
     public async showAllRolesWithUsers(){
         return await Role.query().preload('users');
     }
@@ -128,7 +136,19 @@ export default class Queries {
         return await Role.create(body);
     }
 
+    public async updateRoleById(id:string,body:any){
+        return await Role.query().where('id',id).update(body);
+    }
+
     public async attatchedRole(user:User,roleId:string){
         return await user.related('roles').attach([roleId])
     }
+
+    public async detatchRole(user:User,roleId:string){
+        return await user.related('roles').detach([roleId])
+    }
+
+    public async deleteRoleById(id:string){
+        return await Role.query().where('id',id).delete();
+    }   
 }

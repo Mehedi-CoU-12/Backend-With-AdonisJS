@@ -7,7 +7,7 @@ Route.group(() => {
     Route.post("/delete-user/:id","controller.deleteUser");
     Route.post("/update-user/:id","controller.updateUser");
 
-    Route.get('/get-single-user-roles/:id',"controller");
+    Route.get('/get-single-user-roles/:id',"controller.getSingleUserWithRoles");
 
     //profile
     Route.get("/get-single-profile/:id", "controller.getSingleProfile");
@@ -27,12 +27,13 @@ Route.group(() => {
     //roles
     Route.get('/get-all-roles','controller.showAllRoles');
     Route.get('/get-all-roles-users','controller.getAllRolesWithUsers');
-    Route.get('/get-single-role/:id','controller');
+    Route.get('/get-single-role/:id','controller.getRole');
     Route.get('/get-single-role-users/:id','controller.getSingleRoleWithUsers');
     Route.post('/create-role','controller.createRole');
     Route.post('/assigned-role','controller.assingnedRolesToUser')
-    Route.post('/update-role/:id','controller');
-    Route.post('/delete-role/:id','controller');
+    Route.post('/detatch-role','controller.detatchRoleFromUser')
+    Route.post('/update-role/:id','controller.updateRole');
+    Route.post('/delete-role/:id','controller.deleteRole');
 
 })
     .prefix("/api/v1/user")
