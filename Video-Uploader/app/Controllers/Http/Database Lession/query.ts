@@ -2,6 +2,7 @@ import Profile from "App/Models/Profile";
 import User from "App/Models/User";
 import Post from "App/Models/Post";
 import Role from "App/Models/Role";
+import Database from "@ioc:Adonis/Lucid/Database";
 
 export default class Queries {
     //user
@@ -33,6 +34,10 @@ export default class Queries {
 
     public async deleteUser(id: string) {
         return await User.query().where("id", id).delete();
+    }
+
+    public  async syncRole(user:User,roles:Array<string> ){
+        return await user.related('roles').sync(roles);
     }
 
     //profile
@@ -89,8 +94,9 @@ export default class Queries {
         return await Post.query().where('id',id);
     }
 
-    public async getAllUsersPosts(){
-        return await Post.query();
+    public async getAllUsersPosts(page:number,limit:number){
+
+        return await Post.query().paginate(page,limit);
     }
 
     public async updatePost(

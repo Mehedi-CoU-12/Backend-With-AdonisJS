@@ -8,6 +8,7 @@ Route.group(() => {
     Route.post("/update-user/:id","controller.updateUser");
 
     Route.get('/get-single-user-roles/:id',"controller.getSingleUserWithRoles");
+    Route.post('/sync-role/:id','controller.syncRole')
 
     //profile
     Route.get("/get-single-profile/:id", "controller.getSingleProfile");
