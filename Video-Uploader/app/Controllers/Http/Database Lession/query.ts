@@ -2,12 +2,13 @@ import Profile from "App/Models/Profile";
 import User from "App/Models/User";
 import Post from "App/Models/Post";
 import Role from "App/Models/Role";
-import Database from "@ioc:Adonis/Lucid/Database";
 
 export default class Queries {
     //user
-    public async getAllUsers() {
-        return await User.query();
+    public async getAllUsers(page:any,limit:any) {
+        return await User.query().preload('post',(post)=>{
+            post.limit(2).orderBy('created_at','desc')
+        }).paginate(page,limit);
     }
 
     public async getUserByIdWithRoles(id:string){

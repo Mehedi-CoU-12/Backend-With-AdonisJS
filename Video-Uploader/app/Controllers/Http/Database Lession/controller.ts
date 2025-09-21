@@ -35,7 +35,11 @@ export default class Controller {
     }
 
     public async getAllUsers() {
-        return await this.queries.getAllUsers();
+
+        const page=3;
+        const limit=5;
+
+        return await this.queries.getAllUsers(page,limit);
     }
 
     public async updateUser(ctx: HttpContextContract) {
