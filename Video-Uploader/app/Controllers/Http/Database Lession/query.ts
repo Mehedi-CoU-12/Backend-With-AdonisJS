@@ -5,8 +5,14 @@ import Role from "App/Models/Role";
 
 export default class Queries {
     //user
-    public async getAllUsers() {
-        return await User.query();
+    public async getAllUsers(page:any,limit:any) {
+        return await User.query().preload('post',(post)=>{
+            post.limit(2).orderBy('created_at','desc')
+        }).paginate(page,limit);
+    }
+
+    public async getUserByIdWithRoles(id:string){
+        return await User.query().where('id',id).preload('roles');
     }
 
     public async createUser(body: { email: string; password: string }) {
@@ -29,6 +35,10 @@ export default class Queries {
 
     public async deleteUser(id: string) {
         return await User.query().where("id", id).delete();
+    }
+
+    public  async syncRole(user:User,roles:Array<string> ){
+        return await user.related('roles').sync(roles);
     }
 
     //profile
@@ -85,8 +95,9 @@ export default class Queries {
         return await Post.query().where('id',id);
     }
 
-    public async getAllUsersPosts(){
-        return await Post.query();
+    public async getAllUsersPosts(page:number,limit:number){
+
+        return await Post.query().paginate(page,limit);
     }
 
     public async updatePost(
@@ -116,6 +127,10 @@ export default class Queries {
         return await Role.query();
     }
 
+    public async getRoleById(id:string){
+        return await Role.query().where('id',id);
+    }
+
     public async showAllRolesWithUsers(){
         return await Role.query().preload('users');
     }
@@ -128,7 +143,19 @@ export default class Queries {
         return await Role.create(body);
     }
 
+    public async updateRoleById(id:string,body:any){
+        return await Role.query().where('id',id).update(body);
+    }
+
     public async attatchedRole(user:User,roleId:string){
         return await user.related('roles').attach([roleId])
     }
+
+    public async detatchRole(user:User,roleId:string){
+        return await user.related('roles').detach([roleId])
+    }
+
+    public async deleteRoleById(id:string){
+        return await Role.query().where('id',id).delete();
+    }   
 }
